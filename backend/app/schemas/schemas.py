@@ -190,6 +190,35 @@ class ConversationOut(BaseModel):
 class ConversationCreate(BaseModel):
     receiver_id: UUID
 
+class SessionCreate(BaseModel):
+    receiver_id: UUID
+    skill_id: UUID
+    topic: str
+    description: Optional[str] = None
+    proposed_date: str
+    proposed_time: str
+    duration: int
+
+class SessionOut(BaseModel):
+    session_id: UUID
+    requester_id: UUID
+    receiver_id: UUID
+    skill_id: UUID
+    topic: str
+    description: Optional[str] = None
+    proposed_date: str
+    proposed_time: str
+    duration: int
+    status: str
+    meeting_url: Optional[str] = None
+    created_at: datetime
+    requester: PublicUserOut
+    receiver: PublicUserOut
+    skill: SkillOut
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
 
 
 

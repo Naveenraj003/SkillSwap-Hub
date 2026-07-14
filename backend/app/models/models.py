@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Boolean, UniqueConstraint
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Boolean, UniqueConstraint, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.database.session import Base
@@ -164,6 +164,27 @@ class Message(Base):
     conversation = relationship("Conversation", back_populates="messages")
     sender = relationship("User", foreign_keys=[sender_id])
     receiver = relationship("User", foreign_keys=[receiver_id])
+
+class SessionSwap(Base):
+    __tablename__ = "sessions"
+    
+    session_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    requester_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    receiver_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    skill_id = Column(UUID(as_uuid=True), ForeignKey("skills.skill_id", ondelete="CASCADE"), nullable=False)
+    topic = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    proposed_date = Column(String(50), nullable=False)
+    proposed_time = Column(String(50), nullable=False)
+    duration = Column(Integer, nullable=False) # Duration in minutes
+    status = Column(String(50), default="Requested")
+    meeting_url = Column(String(512), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    requester = relationship("User", foreign_keys=[requester_id])
+    receiver = relationship("User", foreign_keys=[receiver_id])
+    skill = relationship("Skill")
+
 
 
 

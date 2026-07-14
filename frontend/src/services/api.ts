@@ -217,5 +217,71 @@ export const chatService = {
   },
 }
 
+export const sessionsService = {
+  async proposeSession(sessionData: {
+    receiver_id: string
+    skill_id: string
+    topic: string
+    description?: string
+    proposed_date: string
+    proposed_time: string
+    duration: number
+  }) {
+    const response = await api.post('/sessions/request', sessionData)
+    return response.data
+  },
+
+  async getReceivedRequests() {
+    const response = await api.get('/sessions/requests/received')
+    return response.data
+  },
+
+  async getSentRequests() {
+    const response = await api.get('/sessions/requests/sent')
+    return response.data
+  },
+
+  async acceptSession(sessionId: string) {
+    const response = await api.post(`/sessions/${sessionId}/accept`)
+    return response.data
+  },
+
+  async scheduleSession(sessionId: string) {
+    const response = await api.post(`/sessions/${sessionId}/schedule`)
+    return response.data
+  },
+
+  async rejectSession(sessionId: string) {
+    const response = await api.post(`/sessions/${sessionId}/reject`)
+    return response.data
+  },
+
+  async cancelSession(sessionId: string) {
+    const response = await api.post(`/sessions/${sessionId}/cancel`)
+    return response.data
+  },
+
+  async completeSession(sessionId: string) {
+    const response = await api.post(`/sessions/${sessionId}/complete`)
+    return response.data
+  },
+
+  async getActive() {
+    const response = await api.get('/sessions/active')
+    return response.data
+  },
+
+  async getHistory() {
+    const response = await api.get('/sessions/history')
+    return response.data
+  },
+
+  async getDetails(sessionId: string) {
+    const response = await api.get(`/sessions/${sessionId}`)
+    return response.data
+  },
+}
+
+
 
 
