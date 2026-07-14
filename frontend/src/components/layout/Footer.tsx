@@ -22,11 +22,6 @@ export default function Footer() {
 								</a>
 							</li>
 							<li>
-								<a href="marketplace" className="transition-colors hover:text-slate-900">
-									Marketplace
-								</a>
-							</li>
-							<li>
 								<a href="how-it-works" className="transition-colors hover:text-slate-900">
 									How It Works
 								</a>
