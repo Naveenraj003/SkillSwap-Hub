@@ -10,20 +10,26 @@ import Sessions from '../pages/Sessions'
 import Chat from '../pages/Chat'
 import Settings from '../pages/Settings'
 import NotFound from '../pages/NotFound'
+import { ProtectedRoute } from '../components/common/ProtectedRoute'
+import { PublicRoute } from '../components/common/PublicRoute'
 
 export default function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/explore" element={<Explore />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/requests" element={<Requests />} />
-      <Route path="/sessions" element={<Sessions />} />
-      <Route path="/chat" element={<Chat />} />
-      <Route path="/settings" element={<Settings />} />
+      {/* Public pages */}
+      <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+      
+      {/* Protected pages */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
+      <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
+      <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      
       <Route path="*" element={<NotFound />} />
     </Routes>
   )
