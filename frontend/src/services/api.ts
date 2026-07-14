@@ -56,3 +56,42 @@ export const profileService = {
     return response.data
   },
 }
+
+export const skillsService = {
+  async getAvailable() {
+    const response = await api.get('/skills')
+    return response.data
+  },
+
+  async getUserSkills() {
+    const response = await api.get('/skills/user')
+    return response.data
+  },
+
+  async addUserSkill(skillId: string, skillType: 'Teaching' | 'Learning', skillLevel: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert') {
+    const response = await api.post('/skills/user', {
+      skill_id: skillId,
+      skill_type: skillType,
+      skill_level: skillLevel,
+    })
+    return response.data
+  },
+
+  async removeUserSkill(userSkillId: string) {
+    const response = await api.delete(`/skills/user/${userSkillId}`)
+    return response.data
+  },
+}
+
+export const searchService = {
+  async searchBySkill(skillName: string) {
+    const response = await api.get('/search/skill', { params: { skill_name: skillName } })
+    return response.data
+  },
+
+  async searchById(skillswapId: string) {
+    const response = await api.get('/search/id', { params: { skillswap_id: skillswapId } })
+    return response.data
+  },
+}
+

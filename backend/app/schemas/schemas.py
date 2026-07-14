@@ -59,3 +59,37 @@ class PublicUserOut(BaseModel):
     
     model_config = ConfigDict(from_attributes=True)
 
+class SkillOut(BaseModel):
+    skill_id: UUID
+    skill_name: str
+    verified: bool
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class UserSkillCreate(BaseModel):
+    skill_id: UUID
+    skill_type: str # 'Teaching' or 'Learning'
+    skill_level: str # 'Beginner', 'Intermediate', 'Advanced', 'Expert'
+
+class UserSkillOut(BaseModel):
+    user_skill_id: UUID
+    user_id: UUID
+    skill_id: UUID
+    skill_type: str
+    skill_level: str
+    skill: SkillOut
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class SearchResultUser(BaseModel):
+    user_id: UUID
+    skillswap_id: str
+    full_name: str
+    profile_image: Optional[str] = None
+    bio: Optional[str] = None
+    skill_name: str
+    skill_level: str
+    
+    model_config = ConfigDict(from_attributes=True)
+
+

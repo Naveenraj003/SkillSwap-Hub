@@ -5,10 +5,32 @@ from app.database.session import engine, Base
 from app.models import models
 from app.api.v1.auth import router as auth_router
 from app.api.v1.profile import router as profile_router
+from app.api.v1.skills import router as skills_router
+from app.api.v1.search import router as search_router
+
+def seed_default_skills():
+    from app.database.session import SessionLocal
+    from app.models.models import Skill
+    db = SessionLocal()
+    try:
+        if db.query(Skill).count() == 0:
+            default_skills = [
+                "Python", "Java", "JavaScript", "React", "Machine Learning", 
+                "UI/UX Design", "Data Structures", "SQL", "FastAPI", "HTML/CSS"
+            ]
+            for skill_name in default_skills:
+                db.add(Skill(skill_name=skill_name, verified=True))
+            db.commit()
+            print("Successfully seeded default verified skills.")
+    except Exception as e:
+        print(f"Warning: Failed to seed default skills: {e}")
+    finally:
+        db.close()
 
 # Create database tables automatically
 try:
     Base.metadata.create_all(bind=engine)
+    seed_default_skills()
 except Exception as e:
     print(f"Warning: Database connection failed. Tables could not be created: {e}")
 
@@ -30,6 +52,9 @@ app.add_middleware(
 # Include routers
 app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(profile_router, prefix=settings.API_V1_STR)
+app.include_router(skills_router, prefix=settings.API_V1_STR)
+app.include_router(search_router, prefix=settings.API_V1_STR)
+
 
 @app.get("/")
 def read_root():

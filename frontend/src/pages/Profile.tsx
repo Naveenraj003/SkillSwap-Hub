@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { profileService } from '../services/api'
 import DashboardLayout from '../layouts/DashboardLayout'
+import SkillManager from '../components/profile/SkillManager'
 
 export default function Profile() {
   const { user, refreshUser } = useAuth()
@@ -126,6 +127,8 @@ export default function Profile() {
               {submitting ? 'Saving Changes...' : 'Save Changes'}
             </button>
           </form>
+
+          <SkillManager />
         </div>
       </div>
     </DashboardLayout>
