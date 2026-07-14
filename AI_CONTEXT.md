@@ -444,3 +444,15 @@ Implementation should generally proceed in this order:
 ## Operating Principle
 
 When in doubt, prefer the smallest change that preserves architecture, improves clarity, and supports future scale.
+
+## Product Differentiation
+
+SkillSwap Hub focuses on structured peer-to-peer learning.
+
+Key differentiators:
+- Skill identity profiles
+- Skill matching
+- Reputation system
+- Controlled communication
+- Mutual session approval
+- AI-powered learning assistance (future)
