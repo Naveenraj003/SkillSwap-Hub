@@ -190,4 +190,32 @@ export const privacyService = {
   },
 }
 
+export const chatService = {
+  async getConversations() {
+    const response = await api.get('/chat/conversations')
+    return response.data
+  },
+
+  async getOrCreateConversation(receiverId: string) {
+    const response = await api.post('/chat/conversations', { receiver_id: receiverId })
+    return response.data
+  },
+
+  async getMessages(conversationId: string) {
+    const response = await api.get(`/chat/conversations/${conversationId}/messages`)
+    return response.data
+  },
+
+  async sendMessage(conversationId: string, content: string) {
+    const response = await api.post(`/chat/conversations/${conversationId}/messages`, { content })
+    return response.data
+  },
+
+  async markAsRead(conversationId: string) {
+    const response = await api.put(`/chat/conversations/${conversationId}/read`)
+    return response.data
+  },
+}
+
+
 

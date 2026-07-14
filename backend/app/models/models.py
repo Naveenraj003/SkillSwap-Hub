@@ -132,4 +132,38 @@ class Restriction(Base):
         UniqueConstraint('restricter_id', 'restricted_user_id', name='uq_restricter_restricted'),
     )
 
+class Conversation(Base):
+    __tablename__ = "conversations"
+    
+    conversation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_one = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    user_two = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user1 = relationship("User", foreign_keys=[user_one])
+    user2 = relationship("User", foreign_keys=[user_two])
+    
+    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
+    
+    __table_args__ = (
+        UniqueConstraint('user_one', 'user_two', name='uq_conversation_pair'),
+    )
+
+class Message(Base):
+    __tablename__ = "messages"
+    
+    message_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.conversation_id", ondelete="CASCADE"), nullable=False)
+    sender_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    receiver_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    content = Column(Text, nullable=False)
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, index=True)
+    
+    conversation = relationship("Conversation", back_populates="messages")
+    sender = relationship("User", foreign_keys=[sender_id])
+    receiver = relationship("User", foreign_keys=[receiver_id])
+
+
 

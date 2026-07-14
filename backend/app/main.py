@@ -10,6 +10,7 @@ from app.api.v1.search import router as search_router
 from app.api.v1.connections import router as connections_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.privacy import router as privacy_router
+from app.api.v1.chat import router as chat_router
 
 def seed_default_skills():
     from app.database.session import SessionLocal
@@ -60,6 +61,8 @@ app.include_router(search_router, prefix=settings.API_V1_STR)
 app.include_router(connections_router, prefix=settings.API_V1_STR)
 app.include_router(notifications_router, prefix=settings.API_V1_STR)
 app.include_router(privacy_router, prefix=settings.API_V1_STR)
+app.include_router(chat_router, prefix=settings.API_V1_STR)
+
 
 
 

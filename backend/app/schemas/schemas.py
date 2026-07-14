@@ -159,5 +159,38 @@ class RestrictionOut(BaseModel):
     
     model_config = ConfigDict(from_attributes=True)
 
+class MessageCreate(BaseModel):
+    content: str
+
+class MessageOut(BaseModel):
+    message_id: UUID
+    conversation_id: UUID
+    sender_id: UUID
+    receiver_id: UUID
+    content: str
+    is_read: bool
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class ConversationOut(BaseModel):
+    conversation_id: UUID
+    user_one: UUID
+    user_two: UUID
+    created_at: datetime
+    updated_at: datetime
+    user1: PublicUserOut
+    user2: PublicUserOut
+    unread_count: Optional[int] = 0
+    last_message: Optional[str] = None
+    last_message_at: Optional[datetime] = None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class ConversationCreate(BaseModel):
+    receiver_id: UUID
+
+
+
 
 
