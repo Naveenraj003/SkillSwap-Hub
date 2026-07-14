@@ -282,6 +282,63 @@ export const sessionsService = {
   },
 }
 
+export const meetingsService = {
+  async joinMeeting(sessionId: string) {
+    const response = await api.get(`/meetings/${sessionId}/join`)
+    return response.data
+  },
+}
+
+export const reportsService = {
+  async submitReport(reportData: {
+    reported_user_id: string
+    reason: string
+    description: string
+  }) {
+    const response = await api.post('/reports', reportData)
+    return response.data
+  },
+}
+
+export const adminService = {
+  async listUsers(search = '') {
+    const response = await api.get('/admin/users', {
+      params: { search }
+    })
+    return response.data
+  },
+
+  async suspendUser(userId: string, reason?: string) {
+    const response = await api.post(`/admin/users/${userId}/suspend`, null, {
+      params: { reason }
+    })
+    return response.data
+  },
+
+  async activateUser(userId: string) {
+    const response = await api.post(`/admin/users/${userId}/activate`)
+    return response.data
+  },
+
+  async getReports() {
+    const response = await api.get('/admin/reports')
+    return response.data
+  },
+
+  async updateReportStatus(reportId: string, statusStr: string) {
+    const response = await api.put(`/admin/reports/${reportId}/status`, null, {
+      params: { status_str: statusStr }
+    })
+    return response.data
+  },
+
+  async getAuditLogs() {
+    const response = await api.get('/admin/actions')
+    return response.data
+  },
+}
+
+
 
 
 

@@ -42,6 +42,7 @@ class UserOut(UserBase):
     skillswap_id: str
     created_at: datetime
     status: str
+    is_admin: bool
     
     model_config = ConfigDict(from_attributes=True)
 
@@ -217,6 +218,44 @@ class SessionOut(BaseModel):
     skill: SkillOut
     
     model_config = ConfigDict(from_attributes=True)
+
+class ReportCreate(BaseModel):
+    reported_user_id: UUID
+    reason: str
+    description: str
+
+class ReportOut(BaseModel):
+    report_id: UUID
+    reporter_id: UUID
+    reported_user_id: UUID
+    reason: str
+    description: str
+    status: str
+    created_at: datetime
+    reporter: PublicUserOut
+    reported_user: PublicUserOut
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class AdminActionOut(BaseModel):
+    action_id: UUID
+    admin_id: UUID
+    action_type: str
+    target_id: Optional[UUID] = None
+    details: str
+    created_at: datetime
+    admin: PublicUserOut
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class MeetingOut(BaseModel):
+    meeting_id: UUID
+    session_id: UUID
+    meeting_url: str
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
 
 
 

@@ -9,6 +9,7 @@ import Requests from '../pages/Requests'
 import Sessions from '../pages/Sessions'
 import Chat from '../pages/Chat'
 import Settings from '../pages/Settings'
+import Admin from '../pages/Admin'
 import NotFound from '../pages/NotFound'
 import { ProtectedRoute } from '../components/common/ProtectedRoute'
 import { PublicRoute } from '../components/common/PublicRoute'
@@ -29,8 +30,10 @@ export default function AppRoutes() {
       <Route path="/sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
       <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }
+

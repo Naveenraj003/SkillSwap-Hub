@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { searchService, connectionsService, privacyService } from '../services/api'
+import { searchService, connectionsService, privacyService, reportsService } from '../services/api'
 import DashboardLayout from '../layouts/DashboardLayout'
 
 interface SearchResult {
@@ -46,6 +46,39 @@ export default function Explore() {
   const [userToBlock, setUserToBlock] = useState<{ id: string; name: string } | null>(null)
   const [userToRestrict, setUserToRestrict] = useState<{ id: string; name: string } | null>(null)
   const [privacySuccess, setPrivacySuccess] = useState('')
+
+  // Report user modal states
+  const [userToReport, setUserToReport] = useState<{ id: string; name: string } | null>(null)
+  const [reportReason, setReportReason] = useState('Harassment')
+  const [reportDesc, setReportDesc] = useState('')
+  const [reportError, setReportError] = useState('')
+  const [reportSuccess, setReportSuccess] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+
+  const handleReportUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!userToReport || !reportDesc.trim()) return
+    setReportSubmitting(true)
+    setReportError('')
+    setReportSuccess('')
+    try {
+      await reportsService.submitReport({
+        reported_user_id: userToReport.id,
+        reason: reportReason,
+        description: reportDesc.trim()
+      })
+      setReportSuccess('Report submitted successfully.')
+      setTimeout(() => {
+        setUserToReport(null)
+        setReportDesc('')
+        setReportSuccess('')
+      }, 1500)
+    } catch (err: any) {
+      setReportError(err.response?.data?.detail || 'Failed to submit report')
+    } finally {
+      setReportSubmitting(false)
+    }
+  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -282,6 +315,12 @@ export default function Explore() {
                           >
                             Block
                           </button>
+                          <button
+                            onClick={() => setUserToReport({ id: r.user_id, name: r.full_name })}
+                            className="px-3 py-1.5 border border-yellow-600 text-yellow-600 hover:bg-yellow-50 text-xs rounded transition cursor-pointer"
+                          >
+                            Report
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -326,6 +365,12 @@ export default function Explore() {
                           className="px-3 py-1.5 border border-red-200 text-red-600 hover:bg-red-50 text-xs rounded transition cursor-pointer"
                         >
                           Block
+                        </button>
+                        <button
+                          onClick={() => setUserToReport({ id: exactUser.user_id, name: exactUser.profile?.full_name || 'User' })}
+                          className="px-3 py-1.5 border border-yellow-600 text-yellow-600 hover:bg-yellow-50 text-xs rounded transition cursor-pointer"
+                        >
+                          Report
                         </button>
                       </div>
                     </div>
@@ -485,6 +530,76 @@ export default function Explore() {
             </div>
           </div>
         )}
+
+        {/* REPORT DIALOG */}
+        {userToReport && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+            <div className="bg-white border border-gray-200 rounded-lg max-w-sm w-full p-6 shadow-xl space-y-4 text-left">
+              <h3 className="font-bold text-gray-900 text-lg">Report {userToReport.name}</h3>
+              
+              {reportError && (
+                <div className="p-3 text-xs bg-red-50 border border-red-200 text-red-700 rounded">
+                  {reportError}
+                </div>
+              )}
+              {reportSuccess && (
+                <div className="p-3 text-xs bg-green-50 border border-green-200 text-green-700 rounded">
+                  {reportSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleReportUser} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Reason *</label>
+                  <select
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    disabled={reportSubmitting || !!reportSuccess}
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded bg-white animate-none"
+                  >
+                    <option value="Harassment">Harassment</option>
+                    <option value="Spam">Spam</option>
+                    <option value="Inappropriate Content">Inappropriate Content</option>
+                    <option value="Abusive Language">Abusive Language</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1">Details / Description *</label>
+                  <textarea
+                    value={reportDesc}
+                    onChange={(e) => setReportDesc(e.target.value)}
+                    disabled={reportSubmitting || !!reportSuccess}
+                    required
+                    placeholder="Provide details about the behavior or complaint..."
+                    rows={3}
+                    className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded bg-white"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setUserToReport(null)}
+                    disabled={reportSubmitting || !!reportSuccess}
+                    className="px-4 py-1.5 border border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={reportSubmitting || !reportDesc.trim() || !!reportSuccess}
+                    className="px-4 py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm font-semibold transition cursor-pointer"
+                  >
+                    Submit Report
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
 
       </div>
     </DashboardLayout>

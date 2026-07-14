@@ -14,6 +14,7 @@ class User(Base):
     skillswap_id = Column(String(50), unique=True, nullable=False, index=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     status = Column(String(50), default="Active")
+    is_admin = Column(Boolean, default=False)
     
     profile = relationship("Profile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     user_skills = relationship("UserSkill", back_populates="user", cascade="all, delete-orphan")
@@ -184,6 +185,43 @@ class SessionSwap(Base):
     requester = relationship("User", foreign_keys=[requester_id])
     receiver = relationship("User", foreign_keys=[receiver_id])
     skill = relationship("Skill")
+
+class Meeting(Base):
+    __tablename__ = "meetings"
+    
+    meeting_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.session_id", ondelete="CASCADE"), nullable=False, unique=True)
+    meeting_url = Column(String(512), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    session = relationship("SessionSwap")
+
+class Report(Base):
+    __tablename__ = "reports"
+    
+    report_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    reporter_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    reported_user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    reason = Column(String(100), nullable=False)
+    description = Column(Text, nullable=False)
+    status = Column(String(50), default="Pending") # Pending, Reviewed, Resolved
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    reporter = relationship("User", foreign_keys=[reporter_id])
+    reported_user = relationship("User", foreign_keys=[reported_user_id])
+
+class AdminAction(Base):
+    __tablename__ = "admin_actions"
+    
+    action_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    admin_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    action_type = Column(String(100), nullable=False)
+    target_id = Column(UUID(as_uuid=True), nullable=True)
+    details = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    admin = relationship("User", foreign_keys=[admin_id])
+
 
 
 
