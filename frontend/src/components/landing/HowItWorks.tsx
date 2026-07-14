@@ -7,7 +7,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-12 px-4 bg-gray-50">
+    <section id="how-it-works" className="py-12 px-4 bg-gray-50">
       <div className="max-w-6xl mx-auto">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 text-center">How SkillSwap Works</h2>
 
