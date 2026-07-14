@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import NotificationCenter from '../components/layout/NotificationCenter'
 
 interface Props {
   children: React.ReactNode
@@ -45,6 +46,7 @@ export default function DashboardLayout({ children }: Props) {
             </div>
             
             <div className="flex items-center gap-4">
+              <NotificationCenter />
               <div className="text-right hidden sm:block">
                 <div className="text-sm font-semibold text-gray-700">{user?.profile?.full_name || 'User'}</div>
                 <div className="text-xs text-gray-500 font-mono">{user?.skillswap_id}</div>

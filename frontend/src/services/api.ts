@@ -95,3 +95,99 @@ export const searchService = {
   },
 }
 
+export const connectionsService = {
+  async sendRequest(receiverId: string, requestedSkill: string, message?: string) {
+    const response = await api.post('/connections/request', {
+      receiver_id: receiverId,
+      requested_skill: requestedSkill,
+      message,
+    })
+    return response.data
+  },
+
+  async getReceivedRequests() {
+    const response = await api.get('/connections/requests/received')
+    return response.data
+  },
+
+  async getSentRequests() {
+    const response = await api.get('/connections/requests/sent')
+    return response.data
+  },
+
+  async acceptRequest(requestId: string) {
+    const response = await api.post(`/connections/request/${requestId}/accept`)
+    return response.data
+  },
+
+  async rejectRequest(requestId: string) {
+    const response = await api.post(`/connections/request/${requestId}/reject`)
+    return response.data
+  },
+
+  async cancelRequest(requestId: string) {
+    const response = await api.delete(`/connections/request/${requestId}/cancel`)
+    return response.data
+  },
+
+  async getConnections() {
+    const response = await api.get('/connections')
+    return response.data
+  },
+}
+
+export const notificationsService = {
+  async getNotifications() {
+    const response = await api.get('/notifications')
+    return response.data
+  },
+
+  async markRead(notificationId: string) {
+    const response = await api.put(`/notifications/${notificationId}/read`)
+    return response.data
+  },
+}
+
+export const privacyService = {
+  async blockUser(blockedUserId: string, reason?: string) {
+    const response = await api.post('/privacy/block', {
+      blocked_user_id: blockedUserId,
+      reason,
+    })
+    return response.data
+  },
+
+  async unblockUser(blockedUserId: string) {
+    const response = await api.post('/privacy/unblock', null, {
+      params: { blocked_user_id: blockedUserId }
+    })
+    return response.data
+  },
+
+  async restrictUser(restrictedUserId: string, reason?: string) {
+    const response = await api.post('/privacy/restrict', {
+      restricted_user_id: restrictedUserId,
+      reason,
+    })
+    return response.data
+  },
+
+  async unrestrictUser(restrictedUserId: string) {
+    const response = await api.post('/privacy/unrestrict', null, {
+      params: { restricted_user_id: restrictedUserId }
+    })
+    return response.data
+  },
+
+  async getBlockedUsers() {
+    const response = await api.get('/privacy/blocked')
+    return response.data
+  },
+
+  async getRestrictedUsers() {
+    const response = await api.get('/privacy/restricted')
+    return response.data
+  },
+}
+
+

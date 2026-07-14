@@ -88,8 +88,76 @@ class SearchResultUser(BaseModel):
     profile_image: Optional[str] = None
     bio: Optional[str] = None
     skill_name: str
+    skill_id: UUID
     skill_level: str
     
     model_config = ConfigDict(from_attributes=True)
+
+class ConnectionRequestCreate(BaseModel):
+    receiver_id: UUID
+    requested_skill: UUID
+    message: Optional[str] = None
+
+class ConnectionRequestOut(BaseModel):
+    request_id: UUID
+    sender_id: UUID
+    receiver_id: UUID
+    requested_skill: UUID
+    message: Optional[str] = None
+    status: str
+    created_at: datetime
+    sender: PublicUserOut
+    receiver: PublicUserOut
+    skill: SkillOut
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class ConnectionOut(BaseModel):
+    connection_id: UUID
+    user_one: UUID
+    user_two: UUID
+    created_at: datetime
+    user1: PublicUserOut
+    user2: PublicUserOut
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class NotificationOut(BaseModel):
+    notification_id: UUID
+    user_id: UUID
+    title: str
+    message: str
+    type: str
+    is_read: bool
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class BlockCreate(BaseModel):
+    blocked_user_id: UUID
+    reason: Optional[str] = None
+
+class BlockOut(BaseModel):
+    block_id: UUID
+    blocker_id: UUID
+    blocked_user_id: UUID
+    reason: Optional[str] = None
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class RestrictionCreate(BaseModel):
+    restricted_user_id: UUID
+    reason: Optional[str] = None
+
+class RestrictionOut(BaseModel):
+    restriction_id: UUID
+    restricter_id: UUID
+    restricted_user_id: UUID
+    reason: Optional[str] = None
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)
+
 
 

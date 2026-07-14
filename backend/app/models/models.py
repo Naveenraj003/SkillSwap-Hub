@@ -57,3 +57,79 @@ class UserSkill(Base):
         UniqueConstraint('user_id', 'skill_id', 'skill_type', name='uq_user_skill_type'),
     )
 
+class ConnectionRequest(Base):
+    __tablename__ = "connection_requests"
+    
+    request_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sender_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    receiver_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    requested_skill = Column(UUID(as_uuid=True), ForeignKey("skills.skill_id", ondelete="CASCADE"), nullable=False)
+    message = Column(Text, nullable=True)
+    status = Column(String(50), default="Pending")
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    sender = relationship("User", foreign_keys=[sender_id])
+    receiver = relationship("User", foreign_keys=[receiver_id])
+    skill = relationship("Skill")
+
+class Connection(Base):
+    __tablename__ = "connections"
+    
+    connection_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_one = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    user_two = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    user1 = relationship("User", foreign_keys=[user_one])
+    user2 = relationship("User", foreign_keys=[user_two])
+    
+    __table_args__ = (
+        UniqueConstraint('user_one', 'user_two', name='uq_connection_pair'),
+    )
+
+class Notification(Base):
+    __tablename__ = "notifications"
+    
+    notification_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    type = Column(String(50), nullable=False)
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    user = relationship("User")
+
+class Block(Base):
+    __tablename__ = "blocks"
+    
+    block_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    blocker_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    blocked_user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    reason = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    blocker = relationship("User", foreign_keys=[blocker_id])
+    blocked_user = relationship("User", foreign_keys=[blocked_user_id])
+    
+    __table_args__ = (
+        UniqueConstraint('blocker_id', 'blocked_user_id', name='uq_blocker_blocked'),
+    )
+
+class Restriction(Base):
+    __tablename__ = "restrictions"
+    
+    restriction_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    restricter_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    restricted_user_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
+    reason = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    
+    restricter = relationship("User", foreign_keys=[restricter_id])
+    restricted_user = relationship("User", foreign_keys=[restricted_user_id])
+    
+    __table_args__ = (
+        UniqueConstraint('restricter_id', 'restricted_user_id', name='uq_restricter_restricted'),
+    )
+
+

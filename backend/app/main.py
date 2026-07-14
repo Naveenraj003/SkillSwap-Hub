@@ -7,6 +7,9 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.profile import router as profile_router
 from app.api.v1.skills import router as skills_router
 from app.api.v1.search import router as search_router
+from app.api.v1.connections import router as connections_router
+from app.api.v1.notifications import router as notifications_router
+from app.api.v1.privacy import router as privacy_router
 
 def seed_default_skills():
     from app.database.session import SessionLocal
@@ -54,6 +57,10 @@ app.include_router(auth_router, prefix=settings.API_V1_STR)
 app.include_router(profile_router, prefix=settings.API_V1_STR)
 app.include_router(skills_router, prefix=settings.API_V1_STR)
 app.include_router(search_router, prefix=settings.API_V1_STR)
+app.include_router(connections_router, prefix=settings.API_V1_STR)
+app.include_router(notifications_router, prefix=settings.API_V1_STR)
+app.include_router(privacy_router, prefix=settings.API_V1_STR)
+
 
 
 @app.get("/")

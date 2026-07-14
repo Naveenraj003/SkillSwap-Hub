@@ -27,6 +27,7 @@ def search_by_skill(
         Profile.profile_image,
         Profile.bio,
         Skill.skill_name,
+        Skill.skill_id,
         UserSkill.skill_level
     ).join(Profile, User.user_id == Profile.user_id)\
      .join(UserSkill, User.user_id == UserSkill.user_id)\
