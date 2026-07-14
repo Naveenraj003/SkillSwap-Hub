@@ -1,10 +1,7 @@
+import AppRoutes from "./routes/AppRoutes";
+
 function App() {
-  return (
-    <div>
-      <h1>SkillSwap Hub</h1>
-      <p>Learn. Share. Grow.</p>
-    </div>
-  );
+  return <AppRoutes />;
 }
 
 export default App;
