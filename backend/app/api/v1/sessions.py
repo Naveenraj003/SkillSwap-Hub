@@ -361,26 +361,32 @@ def get_active_sessions(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return db.query(SessionSwap).filter(
+    sessions = db.query(SessionSwap).filter(
         or_(
             SessionSwap.requester_id == current_user.user_id,
             SessionSwap.receiver_id == current_user.user_id
         ),
         SessionSwap.status.in_(["Accepted", "Scheduled"])
     ).order_by(SessionSwap.proposed_date.asc(), SessionSwap.proposed_time.asc()).all()
+    for s in sessions:
+        s.meeting_url = None
+    return sessions
 
 @router.get("/history", response_model=List[SessionOut])
 def get_session_history(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    return db.query(SessionSwap).filter(
+    sessions = db.query(SessionSwap).filter(
         or_(
             SessionSwap.requester_id == current_user.user_id,
             SessionSwap.receiver_id == current_user.user_id
         ),
         SessionSwap.status.in_(["Completed", "Cancelled", "Rejected"])
     ).order_by(SessionSwap.proposed_date.desc(), SessionSwap.proposed_time.desc()).all()
+    for s in sessions:
+        s.meeting_url = None
+    return sessions
 
 @router.get("/{session_id}", response_model=SessionOut)
 def get_session_details(
@@ -401,4 +407,5 @@ def get_session_details(
             detail="You are not authorized to view this session"
         )
         
+    session_record.meeting_url = None
     return session_record

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { chatService } from '../services/api'
 import DashboardLayout from '../layouts/DashboardLayout'
@@ -45,6 +46,8 @@ interface Message {
 }
 
 export default function Chat() {
+  const [searchParams] = useSearchParams()
+  const convIdFromQuery = searchParams.get('conv_id')
   const { user } = useAuth()
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null)
@@ -68,8 +71,10 @@ export default function Chat() {
         const updated = data.find((c: Conversation) => c.conversation_id === selectedConv.conversation_id)
         if (updated) setSelectedConv(updated)
       }
+      return data
     } catch (err) {
       console.error('Failed to load chats:', err)
+      return []
     } finally {
       if (!silent) setLoadingConv(false)
     }
@@ -95,8 +100,25 @@ export default function Chat() {
     }
   }
 
+  const selectConversation = async (conv: Conversation) => {
+    setSelectedConv(conv)
+    setError('')
+    await handleMarkRead(conv.conversation_id)
+    await fetchMessages(conv.conversation_id)
+    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
+  }
+
   useEffect(() => {
-    fetchConversations()
+    const initChat = async () => {
+      const data = await fetchConversations()
+      if (convIdFromQuery) {
+        const target = data.find((c: Conversation) => c.conversation_id === convIdFromQuery)
+        if (target) {
+          selectConversation(target)
+        }
+      }
+    }
+    initChat()
   }, [])
 
   useEffect(() => {
@@ -109,14 +131,6 @@ export default function Chat() {
     return () => clearInterval(timer)
   }, [selectedConv])
 
-  const selectConversation = async (conv: Conversation) => {
-    setSelectedConv(conv)
-    setError('')
-    await handleMarkRead(conv.conversation_id)
-    await fetchMessages(conv.conversation_id)
-    setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
-  }
-
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -125,15 +139,35 @@ export default function Chat() {
     e.preventDefault()
     if (!selectedConv || !inputText.trim() || submittingMsg) return
 
+    const messageText = inputText.trim()
+    setInputText('')
+    
+    // Create optimistic message
+    const tempMsgId = `temp-${Date.now()}`
+    const tempMsg: Message = {
+      message_id: tempMsgId,
+      conversation_id: selectedConv.conversation_id,
+      sender_id: user?.user_id || '',
+      receiver_id: getRecipient(selectedConv).user_id,
+      content: messageText,
+      is_read: false,
+      created_at: new Date().toISOString()
+    }
+    
+    // Optimistic insert
+    setMessages(prev => [...prev, tempMsg])
+    
     setSubmittingMsg(true)
     setError('')
     try {
-      const newMsg = await chatService.sendMessage(selectedConv.conversation_id, inputText.trim())
-      setMessages(prev => [...prev, newMsg])
-      setInputText('')
+      const newMsg = await chatService.sendMessage(selectedConv.conversation_id, messageText)
+      // Replace optimistic message with actual persisted message
+      setMessages(prev => prev.map(m => m.message_id === tempMsgId ? newMsg : m))
       fetchConversations(true)
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to send message')
+      // Remove optimistic message if sending fails
+      setMessages(prev => prev.filter(m => m.message_id !== tempMsgId))
     } finally {
       setSubmittingMsg(false)
     }

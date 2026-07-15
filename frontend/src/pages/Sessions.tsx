@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { sessionsService, connectionsService, skillsService } from '../services/api'
+import { sessionsService, connectionsService, skillsService, meetingsService } from '../services/api'
 import DashboardLayout from '../layouts/DashboardLayout'
 import { Calendar, Clock, Video, Plus } from 'lucide-react'
 
@@ -210,6 +210,18 @@ export default function Sessions() {
     }
   }
 
+  const isSessionTimeReached = (proposedDate: string, proposedTime: string) => {
+    try {
+      const [year, month, day] = proposedDate.split('-').map(Number)
+      const [hour, minute] = proposedTime.split(':').map(Number)
+      const scheduledDate = new Date(year, month - 1, day, hour, minute)
+      const now = new Date()
+      return now >= scheduledDate
+    } catch (e) {
+      return false
+    }
+  }
+
   return (
     <DashboardLayout>
       <div className="max-w-4xl mx-auto space-y-6">
@@ -308,18 +320,35 @@ export default function Sessions() {
                             </div>
                           </div>
 
-                          {sess.meeting_url && (
-                            <a
-                              href={sess.meeting_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-md transition shadow-sm cursor-pointer"
-                            >
-                              <Video className="w-4 h-4" />
-                              Join Meeting
-                            </a>
-                          )}
+                          {sess.status === 'Scheduled' || sess.status === 'Accepted' ? (
+                            isSessionTimeReached(sess.proposed_date, sess.proposed_time) ? (
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation()
+                                  try {
+                                    const clientTime = new Date().toISOString()
+                                    const meetingData = await meetingsService.joinMeeting(sess.session_id, clientTime)
+                                    window.open(meetingData.meeting_url, '_blank')
+                                  } catch (err: any) {
+                                    alert(err.response?.data?.detail || 'Failed to join meeting room')
+                                  }
+                                }}
+                                className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-md transition shadow-sm cursor-pointer"
+                              >
+                                <Video className="w-4 h-4" />
+                                Join Meeting
+                              </button>
+                            ) : (
+                              <button
+                                disabled
+                                onClick={(e) => e.stopPropagation()}
+                                className="px-3 py-2 bg-gray-100 border border-gray-200 text-gray-500 text-xs font-semibold rounded-md cursor-not-allowed"
+                                title="Meeting available at scheduled time"
+                              >
+                                Meeting available at scheduled time.
+                              </button>
+                            )
+                          ) : null}
                         </div>
                       ))}
                     </div>

@@ -42,6 +42,11 @@ export default function DashboardLayout({ children }: Props) {
                 <Link to="/chat" className="px-3 py-2 text-sm font-medium text-gray-600 hover:text-blue-600 rounded-md hover:bg-gray-100">
                   Chat
                 </Link>
+                {user?.is_admin && (
+                  <Link to="/admin" className="px-3 py-2 text-sm font-bold text-purple-600 hover:text-purple-700 rounded-md hover:bg-purple-50 transition border border-purple-200">
+                    Admin Panel
+                  </Link>
+                )}
               </nav>
             </div>
             

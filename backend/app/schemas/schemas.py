@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 
@@ -51,15 +51,6 @@ class UserWithProfileOut(UserOut):
     
     model_config = ConfigDict(from_attributes=True)
 
-class PublicUserOut(BaseModel):
-    user_id: UUID
-    skillswap_id: str
-    created_at: datetime
-    status: str
-    profile: Optional[ProfileOut] = None
-    
-    model_config = ConfigDict(from_attributes=True)
-
 class SkillOut(BaseModel):
     skill_id: UUID
     skill_name: str
@@ -79,6 +70,16 @@ class UserSkillOut(BaseModel):
     skill_type: str
     skill_level: str
     skill: SkillOut
+    
+    model_config = ConfigDict(from_attributes=True)
+
+class PublicUserOut(BaseModel):
+    user_id: UUID
+    skillswap_id: str
+    created_at: datetime
+    status: str
+    profile: Optional[ProfileOut] = None
+    user_skills: Optional[List[UserSkillOut]] = None
     
     model_config = ConfigDict(from_attributes=True)
 

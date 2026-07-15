@@ -35,7 +35,8 @@ def search_by_skill(
      .filter(
          UserSkill.skill_type == "Teaching",
          Skill.skill_name.ilike(f"%{skill_name.strip()}%"),
-         User.status == "Active"
+         User.status == "Active",
+         User.user_id != current_user.user_id
      ).all()
      
     return results
@@ -54,7 +55,8 @@ def search_by_id(
         
     user = db.query(User).filter(
         User.skillswap_id == skillswap_id.strip(),
-        User.status == "Active"
+        User.status == "Active",
+        User.user_id != current_user.user_id
     ).first()
     
     if not user:

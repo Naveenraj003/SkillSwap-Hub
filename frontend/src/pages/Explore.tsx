@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { searchService, connectionsService, privacyService, reportsService } from '../services/api'
+import React, { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { searchService, connectionsService, privacyService, reportsService, chatService } from '../services/api'
 import DashboardLayout from '../layouts/DashboardLayout'
 
 interface SearchResult {
@@ -26,6 +27,7 @@ interface ExactProfile {
 }
 
 export default function Explore() {
+  const navigate = useNavigate()
   const [searchType, setSearchType] = useState<'skill' | 'id'>('skill')
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(false)
@@ -34,6 +36,11 @@ export default function Explore() {
   const [skillResults, setSkillResults] = useState<SearchResult[]>([])
   const [exactUser, setExactUser] = useState<ExactProfile | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
+
+  // Relationships state
+  const [connections, setConnections] = useState<string[]>([])
+  const [pendingSent, setPendingSent] = useState<string[]>([])
+  const [pendingReceived, setPendingReceived] = useState<string[]>([])
 
   // Connection Dialog State
   const [selectedUserForConnect, setSelectedUserForConnect] = useState<SearchResult | null>(null)
@@ -54,6 +61,72 @@ export default function Explore() {
   const [reportError, setReportError] = useState('')
   const [reportSuccess, setReportSuccess] = useState('')
   const [reportSubmitting, setReportSubmitting] = useState(false)
+
+  const loadRelationships = async () => {
+    try {
+      const [connData, sentData, recData] = await Promise.all([
+        connectionsService.getConnections(),
+        connectionsService.getSentRequests(),
+        connectionsService.getReceivedRequests()
+      ])
+      setConnections(connData.map((c: any) => c.user_id))
+      setPendingSent(sentData.map((r: any) => r.receiver_id))
+      setPendingReceived(recData.map((r: any) => r.sender_id))
+    } catch (e) {
+      console.error('Failed to load relationships:', e)
+    }
+  }
+
+  useEffect(() => {
+    loadRelationships()
+  }, [])
+
+  // Debounced search logic
+  useEffect(() => {
+    setError('')
+    setExactUser(null)
+    setSkillResults([])
+    
+    if (!query.trim()) {
+      setHasSearched(false)
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    setHasSearched(true)
+
+    const timer = setTimeout(async () => {
+      try {
+        if (searchType === 'skill') {
+          const data = await searchService.searchBySkill(query)
+          setSkillResults(data)
+        } else {
+          const data = await searchService.searchById(query)
+          setExactUser(data)
+        }
+      } catch (err: any) {
+        if (err.response?.status === 404) {
+          // Safe to leave empty results for 404 search lookups
+        } else {
+          setError(err.response?.data?.detail || 'An error occurred during search')
+        }
+      } finally {
+        setLoading(false)
+      }
+    }, 400)
+
+    return () => clearTimeout(timer)
+  }, [query, searchType])
+
+  const handleMessageUser = async (recipientId: string) => {
+    try {
+      const conv = await chatService.getOrCreateConversation(recipientId)
+      navigate(`/chat?conv_id=${conv.conversation_id}`)
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to open chat')
+    }
+  }
 
   const handleReportUser = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -80,37 +153,8 @@ export default function Explore() {
     }
   }
 
-  const handleSearch = async (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setExactUser(null)
-    setSkillResults([])
-    
-    if (!query.trim()) {
-      setError('Please enter a search query')
-      return
-    }
-
-    setLoading(true)
-    setHasSearched(true)
-    
-    try {
-      if (searchType === 'skill') {
-        const data = await searchService.searchBySkill(query)
-        setSkillResults(data)
-      } else {
-        const data = await searchService.searchById(query)
-        setExactUser(data)
-      }
-    } catch (err: any) {
-      if (err.response?.status === 404) {
-        // Safe to leave empty results for 404 search lookups
-      } else {
-        setError(err.response?.data?.detail || 'An error occurred during search')
-      }
-    } finally {
-      setLoading(false)
-    }
   }
 
   const handleSendConnectRequest = async () => {
@@ -127,6 +171,7 @@ export default function Explore() {
         connectMessage
       )
       setConnectSuccess('Connection request sent!')
+      loadRelationships()
       setTimeout(() => {
         setSelectedUserForConnect(null)
         setConnectMessage('')
@@ -232,13 +277,6 @@ export default function Explore() {
               }
               className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"
             />
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium rounded-md shadow-sm transition cursor-pointer"
-            >
-              {loading ? 'Searching...' : 'Search'}
-            </button>
           </form>
 
           {error && (
@@ -250,7 +288,7 @@ export default function Explore() {
 
         {/* Loading State */}
         {loading && (
-          <div className="text-center py-12 bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="text-center py-12 bg-white border border-gray-200 rounded-lg shadow-sm animate-pulse">
             <p className="text-gray-500">Searching matching profiles...</p>
           </div>
         )}
@@ -297,12 +335,35 @@ export default function Explore() {
                         </div>
                         
                         <div className="flex sm:flex-col gap-2 sm:self-center">
-                          <button
-                            onClick={() => setSelectedUserForConnect(r)}
-                            className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md shadow-sm transition cursor-pointer"
-                          >
-                            Connect
-                          </button>
+                          {connections.includes(r.user_id) ? (
+                            <button
+                              onClick={() => handleMessageUser(r.user_id)}
+                              className="px-4 py-1.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-md shadow-sm transition cursor-pointer"
+                            >
+                              Message
+                            </button>
+                          ) : pendingSent.includes(r.user_id) ? (
+                            <button
+                              disabled
+                              className="px-4 py-1.5 bg-gray-100 border border-gray-300 text-gray-500 text-sm font-semibold rounded-md shadow-sm transition cursor-not-allowed"
+                            >
+                              Pending
+                            </button>
+                          ) : pendingReceived.includes(r.user_id) ? (
+                            <button
+                              onClick={() => navigate('/requests')}
+                              className="px-4 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-semibold rounded-md shadow-sm transition cursor-pointer"
+                            >
+                              Accept Invitation
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setSelectedUserForConnect(r)}
+                              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md shadow-sm transition cursor-pointer"
+                            >
+                              Connect
+                            </button>
+                          )}
                           <button
                             onClick={() => setUserToRestrict({ id: r.user_id, name: r.full_name })}
                             className="px-3 py-1.5 border border-gray-300 text-gray-600 hover:bg-gray-50 text-xs rounded transition cursor-pointer"
@@ -354,6 +415,25 @@ export default function Explore() {
                       </div>
                       
                       <div className="flex gap-2">
+                        {connections.includes(exactUser.user_id) ? (
+                          <button
+                            onClick={() => handleMessageUser(exactUser.user_id)}
+                            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded transition cursor-pointer"
+                          >
+                            Message
+                          </button>
+                        ) : pendingSent.includes(exactUser.user_id) ? (
+                          <span className="px-3 py-1.5 bg-gray-100 text-gray-500 text-xs font-semibold rounded border border-gray-200">
+                            Request Pending
+                          </span>
+                        ) : pendingReceived.includes(exactUser.user_id) ? (
+                          <button
+                            onClick={() => navigate('/requests')}
+                            className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold rounded transition cursor-pointer"
+                          >
+                            Accept Request
+                          </button>
+                        ) : null}
                         <button
                           onClick={() => setUserToRestrict({ id: exactUser.user_id, name: exactUser.profile?.full_name || 'User' })}
                           className="px-3 py-1.5 border border-gray-300 text-gray-600 hover:bg-gray-50 text-xs rounded transition cursor-pointer"
@@ -376,6 +456,38 @@ export default function Explore() {
                     </div>
 
                     <div className="space-y-2 border-t border-gray-150 pt-4">
+                      {exactUser.user_skills && exactUser.user_skills.filter((us: any) => us.skill_type === 'Teaching').length > 0 && (
+                        <div className="pb-2">
+                          <h4 className="text-xs font-bold text-gray-500 uppercase">Teaches</h4>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {exactUser.user_skills.filter((us: any) => us.skill_type === 'Teaching').map((us: any) => (
+                              <div key={us.user_skill_id} className="flex items-center gap-2 bg-blue-50/50 border border-blue-100 rounded px-2.5 py-1">
+                                <span className="text-blue-700 font-semibold text-xs">
+                                  {us.skill.skill_name} ({us.skill_level})
+                                </span>
+                                {!connections.includes(exactUser.user_id) && !pendingSent.includes(exactUser.user_id) && !pendingReceived.includes(exactUser.user_id) && (
+                                  <button
+                                    onClick={() => setSelectedUserForConnect({
+                                      user_id: exactUser.user_id,
+                                      skillswap_id: exactUser.skillswap_id,
+                                      full_name: exactUser.profile?.full_name || 'User',
+                                      profile_image: exactUser.profile?.profile_image || null,
+                                      bio: exactUser.profile?.bio || null,
+                                      skill_name: us.skill.skill_name,
+                                      skill_id: us.skill.skill_id,
+                                      skill_level: us.skill_level
+                                    })}
+                                    className="text-[10px] text-blue-600 hover:text-blue-800 underline font-semibold transition"
+                                  >
+                                    Connect
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div>
                         <h4 className="text-xs font-bold text-gray-500 uppercase">About</h4>
                         <p className="text-sm text-gray-600 leading-relaxed mt-1">

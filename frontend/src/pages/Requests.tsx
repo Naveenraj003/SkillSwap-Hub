@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { connectionsService } from '../services/api'
+import { useNavigate } from 'react-router-dom'
+import { connectionsService, chatService } from '../services/api'
 import DashboardLayout from '../layouts/DashboardLayout'
 
 interface Skill {
@@ -33,6 +34,7 @@ interface ConnectionRequest {
 }
 
 export default function Requests() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<'received' | 'sent' | 'connections'>('received')
   const [receivedRequests, setReceivedRequests] = useState<ConnectionRequest[]>([])
   const [sentRequests, setSentRequests] = useState<ConnectionRequest[]>([])
@@ -40,6 +42,17 @@ export default function Requests() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+
+  const handleStartChat = async (recipientId: string) => {
+    setError('')
+    setSuccessMessage('')
+    try {
+      const conv = await chatService.getOrCreateConversation(recipientId)
+      navigate(`/chat?conv_id=${conv.conversation_id}`)
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to open chat')
+    }
+  }
 
   const fetchData = async () => {
     try {
@@ -280,9 +293,8 @@ export default function Requests() {
 
                           <div className="flex sm:flex-col gap-2 self-end sm:self-center">
                             <button
-                              disabled
-                              className="px-4 py-1.5 bg-gray-100 border border-gray-300 text-gray-500 text-xs font-semibold rounded cursor-not-allowed"
-                              title="Chat messaging will be unlocked in Milestone 4"
+                              onClick={() => handleStartChat(conn.user_id)}
+                              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition cursor-pointer"
                             >
                               Message
                             </button>

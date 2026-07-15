@@ -55,6 +55,17 @@ export const profileService = {
     const response = await api.put('/profile/update', profileData)
     return response.data
   },
+
+  async uploadAvatar(file: File) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await api.post('/profile/upload-avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
 }
 
 export const skillsService = {
@@ -283,8 +294,10 @@ export const sessionsService = {
 }
 
 export const meetingsService = {
-  async joinMeeting(sessionId: string) {
-    const response = await api.get(`/meetings/${sessionId}/join`)
+  async joinMeeting(sessionId: string, clientTime?: string) {
+    const response = await api.get(`/meetings/${sessionId}/join`, {
+      params: { client_time: clientTime }
+    })
     return response.data
   },
 }

@@ -5,6 +5,7 @@ interface User {
   user_id: string
   email: string
   skillswap_id: string
+  is_admin: boolean
   created_at: string
   status: string
   profile?: {

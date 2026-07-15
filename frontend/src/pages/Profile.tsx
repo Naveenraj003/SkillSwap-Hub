@@ -14,6 +14,8 @@ export default function Profile() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState('')
 
   useEffect(() => {
     if (user?.profile) {
@@ -23,6 +25,27 @@ export default function Profile() {
       setExperience(user.profile.experience || '')
     }
   }, [user])
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    setUploadingAvatar(true)
+    setAvatarError('')
+    setError('')
+    setSuccess('')
+    
+    try {
+      const data = await profileService.uploadAvatar(file)
+      setProfileImage(data.profile_image || '')
+      setSuccess('Avatar uploaded successfully!')
+      await refreshUser()
+    } catch (err: any) {
+      setAvatarError(err.response?.data?.detail || 'Failed to upload avatar')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,16 +106,26 @@ export default function Profile() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Profile Image URL</label>
-              <input
-                type="text"
-                value={profileImage}
-                onChange={(e) => setProfileImage(e.target.value)}
-                disabled={submitting}
-                placeholder="https://example.com/image.png"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-white"
-              />
+            <div className="flex flex-col sm:flex-row gap-4 items-center bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-2xl overflow-hidden border border-blue-200 flex-shrink-0">
+                {profileImage ? (
+                  <img src={profileImage} alt={fullName} className="w-full h-full object-cover" />
+                ) : (
+                  fullName ? fullName.charAt(0) : 'U'
+                )}
+              </div>
+              <div className="flex-1 text-left space-y-1.5 w-full">
+                <label className="block text-sm font-semibold text-gray-750">Profile Picture</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  disabled={uploadingAvatar || submitting}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 file:hover:bg-blue-100 transition cursor-pointer"
+                />
+                {uploadingAvatar && <p className="text-xs text-blue-600 animate-pulse font-medium">Uploading avatar to storage...</p>}
+                {avatarError && <p className="text-xs text-red-600 font-medium">Error: {avatarError}</p>}
+              </div>
             </div>
 
             <div>

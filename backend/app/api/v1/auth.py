@@ -47,12 +47,16 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
         # Generate SSH ID
         ssh_id = generate_unique_skillswap_id(db)
         
+        # Check if first user in database
+        is_first_user = db.query(User).count() == 0
+        
         # Create user record locally
         db_user = User(
             user_id=supabase_user.id,
             email=user_in.email,
             skillswap_id=ssh_id,
-            status="Active"
+            status="Active",
+            is_admin=is_first_user
         )
         db.add(db_user)
         
@@ -91,10 +95,28 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
         # Check local status to see if blocked
         user = db.query(User).filter(User.user_id == auth_response.user.id).first()
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User profile not initialized in database"
+            is_first_user = db.query(User).count() == 0
+            ssh_id = generate_unique_skillswap_id(db)
+            user = User(
+                user_id=auth_response.user.id,
+                email=auth_response.user.email,
+                skillswap_id=ssh_id,
+                status="Active",
+                is_admin=is_first_user
             )
+            db.add(user)
+            
+            full_name = "User"
+            if auth_response.user.user_metadata:
+                full_name = auth_response.user.user_metadata.get("full_name", "User")
+                
+            db_profile = Profile(
+                user_id=auth_response.user.id,
+                full_name=full_name
+            )
+            db.add(db_profile)
+            db.commit()
+            db.refresh(user)
             
         if user.status == "Blocked":
             raise HTTPException(

@@ -90,4 +90,4 @@ def read_root():
 @app.get("/api/v1/health")
 def health_check():
     return {"status": "healthy", "service": settings.PROJECT_NAME}
-
+# reload trigger: supabase URL updated

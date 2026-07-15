@@ -6,12 +6,15 @@ from app.models.models import User, SessionSwap, Meeting, Block
 from app.schemas.schemas import MeetingOut
 from app.authentication.auth import get_current_user
 from uuid import UUID
+from datetime import datetime
+from typing import Optional
 
 router = APIRouter(prefix="/meetings", tags=["meetings"])
 
 @router.get("/{session_id}/join", response_model=MeetingOut)
 def join_meeting(
     session_id: UUID,
+    client_time: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -33,6 +36,40 @@ def join_meeting(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot join meeting. Session must be in Accepted or Scheduled status."
         )
+
+    # Time locked availability validation
+    if client_time:
+        try:
+            # Clean up timezone or ms suffix
+            cleaned = client_time.split('.')[0] if '.' in client_time else client_time
+            cleaned = cleaned.replace('Z', '').split('+')[0]
+            client_dt = datetime.fromisoformat(cleaned)
+            
+            # Format: '2026-07-15' '10:30' -> '%Y-%m-%d %H:%M'
+            session_dt = datetime.strptime(
+                f"{session_record.proposed_date} {session_record.proposed_time}",
+                "%Y-%m-%d %H:%M"
+            )
+            
+            if client_dt < session_dt:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cannot join meeting yet. It will be available at the scheduled time."
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            # Fall back to server time if client parsing fails
+            server_dt = datetime.now()
+            session_dt = datetime.strptime(
+                f"{session_record.proposed_date} {session_record.proposed_time}",
+                "%Y-%m-%d %H:%M"
+            )
+            if server_dt < session_dt:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cannot join meeting yet. It will be available at the scheduled time."
+                )
         
     block = db.query(Block).filter(
         or_(
