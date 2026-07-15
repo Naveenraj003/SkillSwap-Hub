@@ -369,6 +369,7 @@ def get_active_sessions(
         SessionSwap.status.in_(["Accepted", "Scheduled"])
     ).order_by(SessionSwap.proposed_date.asc(), SessionSwap.proposed_time.asc()).all()
     for s in sessions:
+        db.expunge(s)
         s.meeting_url = None
     return sessions
 
@@ -385,6 +386,7 @@ def get_session_history(
         SessionSwap.status.in_(["Completed", "Cancelled", "Rejected"])
     ).order_by(SessionSwap.proposed_date.desc(), SessionSwap.proposed_time.desc()).all()
     for s in sessions:
+        db.expunge(s)
         s.meeting_url = None
     return sessions
 
@@ -407,5 +409,6 @@ def get_session_details(
             detail="You are not authorized to view this session"
         )
         
+    db.expunge(session_record)
     session_record.meeting_url = None
     return session_record

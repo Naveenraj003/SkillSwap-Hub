@@ -24,6 +24,16 @@ interface ExactProfile {
     bio: string | null
     experience: string | null
   }
+  user_skills?: Array<{
+    user_skill_id: string
+    skill_type: string
+    skill_level: string
+    skill: {
+      skill_id: string
+      skill_name: string
+      verified: boolean
+    }
+  }>
 }
 
 export default function Explore() {

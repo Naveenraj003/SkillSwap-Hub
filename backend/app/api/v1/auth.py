@@ -1,5 +1,6 @@
 import random
 import string
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database.session import get_db
@@ -52,7 +53,7 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
         
         # Create user record locally
         db_user = User(
-            user_id=supabase_user.id,
+            user_id=UUID(supabase_user.id),
             email=user_in.email,
             skillswap_id=ssh_id,
             status="Active",
@@ -62,7 +63,7 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
         
         # Create profile record locally
         db_profile = Profile(
-            user_id=supabase_user.id,
+            user_id=UUID(supabase_user.id),
             full_name=user_in.full_name
         )
         db.add(db_profile)
@@ -71,6 +72,9 @@ def register(user_in: UserRegister, db: Session = Depends(get_db)):
         db.refresh(db_user)
         return db_user
         
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(
@@ -93,12 +97,12 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
         })
         
         # Check local status to see if blocked
-        user = db.query(User).filter(User.user_id == auth_response.user.id).first()
+        user = db.query(User).filter(User.user_id == UUID(auth_response.user.id)).first()
         if not user:
             is_first_user = db.query(User).count() == 0
             ssh_id = generate_unique_skillswap_id(db)
             user = User(
-                user_id=auth_response.user.id,
+                user_id=UUID(auth_response.user.id),
                 email=auth_response.user.email,
                 skillswap_id=ssh_id,
                 status="Active",
@@ -111,7 +115,7 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
                 full_name = auth_response.user.user_metadata.get("full_name", "User")
                 
             db_profile = Profile(
-                user_id=auth_response.user.id,
+                user_id=UUID(auth_response.user.id),
                 full_name=full_name
             )
             db.add(db_profile)
@@ -130,7 +134,11 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
             refresh_token=auth_response.session.refresh_token
         )
         
+    except HTTPException:
+        db.rollback()
+        raise
     except Exception as e:
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Login failed: {str(e)}"

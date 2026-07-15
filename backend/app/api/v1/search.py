@@ -20,7 +20,7 @@ def search_by_skill(
             detail="Skill name search query cannot be empty"
         )
         
-    results = db.query(
+    rows = db.query(
         User.user_id,
         User.skillswap_id,
         Profile.full_name,
@@ -39,7 +39,19 @@ def search_by_skill(
          User.user_id != current_user.user_id
      ).all()
      
-    return results
+    return [
+        {
+            "user_id": r.user_id,
+            "skillswap_id": r.skillswap_id,
+            "full_name": r.full_name,
+            "profile_image": r.profile_image,
+            "bio": r.bio,
+            "skill_name": r.skill_name,
+            "skill_id": r.skill_id,
+            "skill_level": r.skill_level,
+        }
+        for r in rows
+    ]
 
 @router.get("/id", response_model=PublicUserOut)
 def search_by_id(
