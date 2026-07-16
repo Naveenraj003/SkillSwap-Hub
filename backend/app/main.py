@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.database.session import engine, Base
 from app.models import models
@@ -42,17 +43,20 @@ def seed_default_skills():
     finally:
         db.close()
 
-# Create database tables automatically
-try:
-    Base.metadata.create_all(bind=engine)
-    seed_default_skills()
-except Exception as e:
-    print(f"Warning: Database connection failed. Tables could not be created: {e}")
-
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Create database tables automatically
+    try:
+        Base.metadata.create_all(bind=engine)
+        seed_default_skills()
+    except Exception as e:
+        print(f"Warning: Database connection failed. Tables could not be created: {e}")
+    yield
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    lifespan=lifespan
 )
 
 # CORS middleware configuration
